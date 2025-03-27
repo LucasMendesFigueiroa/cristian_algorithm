@@ -1,0 +1,30 @@
+services:  # Início da definição dos serviços do Docker Compose.
+  
+  time_server:  # Nome do serviço para o servidor de tempo.
+    build: .  # Indica que a imagem deve ser construída a partir do Dockerfile presente no diretório atual.
+    ports:  # Define as portas a serem expostas.
+      - "12345:12345"  # Mapeia a porta 12345 do contêiner para a porta 12345 do host. O servidor ouvirá requisições nesta porta.
+
+  client1:  # Nome do primeiro cliente.
+    build: .  # A imagem do cliente também será construída a partir do Dockerfile no diretório atual.
+    command: ["python", "client.py"]  # O comando a ser executado quando o contêiner iniciar. Neste caso, executa o script client.py.
+    depends_on:  # Define dependências entre serviços.
+      - time_server  # Garante que o serviço time_server seja iniciado antes do client1.
+
+  client2:  # Nome do segundo cliente.
+    build: .  # A imagem do cliente será construída a partir do mesmo Dockerfile.
+    command: ["python", "client.py"]  # Executa o mesmo script client.py.
+    depends_on:  # Define dependências entre serviços.
+      - time_server  # Garante que o serviço time_server seja iniciado antes do client2.
+
+  client3:  # Nome do terceiro cliente.
+    build: .  # A imagem do cliente será construída a partir do mesmo Dockerfile.
+    command: ["python", "client.py"]  # Executa o mesmo script client.py.
+    depends_on:  # Define dependências entre serviços.
+      - time_server  # Garante que o serviço time_server seja iniciado antes do client3.
+
+  client4:  # Nome do quarto cliente.
+    build: .  # A imagem do cliente será construída a partir do mesmo Dockerfile.
+    command: ["python", "client.py"]  # Executa o mesmo script client.py.
+    depends_on:  # Define dependências entre serviços.
+      - time_server  # Garante que o serviço time_server seja iniciado antes do client4.
