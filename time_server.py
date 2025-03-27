@@ -1,16 +1,11 @@
 import socket
 import time
 import logging
+import ntplib
 
 # Configurações de logging
 # O nível de logging é definido como INFO, o que significa que mensagens de nível INFO e superiores (WARNING, ERROR, etc.) serão exibidas.
 logging.basicConfig(level=logging.INFO)
-
-def calculate_time_delay(receive_time):
-    # Esta função calcula o atraso estimado na comunicação.
-    # A função recebe o tempo em que a requisição foi recebida (receive_time).
-    # Para simplificação, não está calculando o atraso real da rede (que envolveria medir o tempo de ida e volta da mensagem).
-    return (time.time() - receive_time) / 2  # Retorna o atraso estimado como a metade do tempo decorrido.
 
 def start_server(host='0.0.0.0', port=12345):
     # Esta função inicia um servidor UDP que escuta requisições de hora.
@@ -35,23 +30,21 @@ def start_server(host='0.0.0.0', port=12345):
 
             if data.decode() == "TIME_REQUEST":
                 # Verifica se a mensagem recebida é uma requisição de hora.
-                receive_time = time.time()
-                # Registra o tempo em que a requisição foi recebida.
+                logging.info(f"Requisição de hora recebida de {addr}")
 
-                delay = calculate_time_delay(receive_time)
-                # Chama a função calculate_time_delay para estimar o atraso e armazena o resultado na variável delay.
+                # Obtém a hora correta usando o ntplib
+                try:
+                    client = ntplib.NTPClient()
+                    response = client.request('pool.ntp.org')  # Faz uma requisição a um servidor NTP
+                    adjusted_time = response.tx_time  # O tempo transmitido pelo servidor NTP
+                    response_time = time.ctime(adjusted_time)  # Converte o tempo transmitido em uma string legível
+                except Exception as e:
+                    logging.error(f"Erro ao obter a hora do servidor NTP: {e}")
+                    response_time = "Erro ao obter a hora"
 
-                adjusted_time = receive_time + delay
-                # Ajusta a hora recebida somando o atraso estimado.
-
-                response = f"{time.ctime(adjusted_time)}"
-                # Converte o tempo ajustado em uma string legível (formato de data e hora) para a resposta.
-
-                server_socket.sendto(response.encode(), addr)
-                # Envia a resposta de volta ao cliente que fez a requisição, codificando a string em bytes.
-
-                logging.info(f"Hora enviada para {addr}: {response}")
-                # Registra uma mensagem de informação indicando que a hora foi enviada para o cliente, incluindo o endereço do cliente e a hora enviada.
+                # Envia a resposta de volta ao cliente que fez a requisição
+                server_socket.sendto(response_time.encode(), addr)
+                logging.info(f"Hora enviada para {addr}: {response_time}")
 
 if __name__ == "__main__":
     start_server()
